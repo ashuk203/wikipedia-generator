@@ -32,7 +32,7 @@ from tensor2tensor.data_generators import generator_utils
 from tensor2tensor.data_generators import problem
 from tensor2tensor.data_generators import text_encoder
 from tensor2tensor.data_generators import tokenizer
-from tensor2tensor.data_generators.wikisum import utils as cc_utils
+import utils as cc_utils
 from tensor2tensor.layers import modalities
 from tensor2tensor.utils import metrics
 from tensor2tensor.utils import registry
@@ -520,6 +520,7 @@ def extract_references_from_wets(wet_files, metadata_dir, out_dir,
     with tf.gfile.Open(cc_utils.readahead(metadata_fname)) as f:
       wet_metadata = json.loads(f.read())
 
+
     if not wet_metadata:
       # No references in this WET file
       continue
@@ -535,7 +536,9 @@ def extract_references_from_wets(wet_files, metadata_dir, out_dir,
           cc_utils.gzip_memfile(wet_file), take_ownership=True)
 
     for wet_record in record_gen:
-      shard_ids = wet_metadata.get(wet_record.url)
+      cur_url_str = wet_record.url.decode('utf-8')
+      shard_ids = wet_metadata.get(cur_url_str)
+
       if not shard_ids:
         # URL not in dataset
         continue

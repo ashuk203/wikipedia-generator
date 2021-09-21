@@ -66,8 +66,8 @@ class WETHeader(collections.namedtuple('WETHeader', ['url', 'length'])):
     if not line:
       # EOF
       return None
-    while not line.startswith(cls.LENGTH_HEADER):
-      if line.startswith(cls.URI_HEADER):
+    while not line.startswith(cls.LENGTH_HEADER.encode('utf-8')):
+      if line.startswith(cls.URI_HEADER.encode('utf-8')):
         url = line[len(cls.URI_HEADER):].strip()
       line = f.readline()
 
@@ -75,7 +75,7 @@ class WETHeader(collections.namedtuple('WETHeader', ['url', 'length'])):
     f.readline()
 
     # Read content
-    length = int(line.split(':')[1])
+    length = int(line.split(':'.encode('utf-8'))[1])
 
     return cls(url, length)
 
@@ -134,7 +134,7 @@ def download(url, download_dir):
     return outname
   inprogress = outname + '.incomplete'
   print('Downloading %s' % url)
-  inprogress, _ = urllib.urlretrieve(url, inprogress)
+  inprogress, _ = urllib.request.urlretrieve(url, inprogress)
   tf.gfile.Rename(inprogress, outname)
   return outname
 
@@ -144,7 +144,7 @@ def wet_download_urls(wet_paths_url, tmp_dir, rm_after=True):
   with gzip.open(paths_gz) as f:
     path = f.readline()
     while path:
-      download_path = S3_HTTP_PREFIX + path[:-1]
+      download_path = S3_HTTP_PREFIX + path[:-1].decode("utf-8") 
       yield download_path
       path = f.readline()
   if rm_after:

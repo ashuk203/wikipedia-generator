@@ -2,7 +2,7 @@
 
 This directory contains the code and scripts to generate the dataset from the
 paper [Generating Wikipedia by Summarizing Long
-Sequences](https://arxiv.org/abs/1801.10198).  The task is to generate a
+Sequences](https://arxiv.org/abs/1801.10198). The task is to generate a
 Wikipedia article based on the contents of the cited references in that article
 and the top 10 Google search results for the article's title.
 
@@ -30,8 +30,7 @@ extract the title, section breaks, and section headings. The processed Wikipedia
 content is available in sharded `TFRecord` files containing serialized
 `tensorflow.Example` protocol buffers here:
 `gs://tensor2tensor-data/wikisum/wiki_content/`. The sharding is determined by a
-hash of the Wikpedia article's title. The `Example`s contain features `[url,
-title, section_titles, section_texts]`.
+hash of the Wikpedia article's title. The `Example`s contain features `[url, title, section_titles, section_texts]`.
 
 **CommonCrawl References Index:** To enable efficiently extracting the reference
 URLs from CommonCrawl, we provide a JSON file per CommonCrawl file which maps a
@@ -41,7 +40,7 @@ ones that contain one or more Wikipedia articles that cite this reference. The
 scripts in this directory will use this information to efficiently join the
 reference with their Wikipedia articles.
 
-*Note*: You can use [`gsutil`](https://cloud.google.com/storage/docs/gsutil) to
+_Note_: You can use [`gsutil`](https://cloud.google.com/storage/docs/gsutil) to
 view the support files.
 
 ## Data generation
@@ -95,10 +94,10 @@ You'll also need to request the requisite
 [quotas](https://console.cloud.google.com/iam-admin/quotas) in the zone you'll
 be launching the machines in (whatever default zone you set above):
 
-* In-use IP addresses: 1,000
-* Internal IP addresses: 1,000
-* Persistent Disk Standard (GB): 10,000
-* CPUs: 4,000
+- In-use IP addresses: 1,000
+- Internal IP addresses: 1,000
+- Persistent Disk Standard (GB): 10,000
+- CPUs: 4,000
 
 **Running the commands below will launch instances on Google Cloud Platform and
 you will incur charges.** If any of the commands go bad, immediately delete any
@@ -114,12 +113,12 @@ on GCP.
 Pricing is taken from
 [here](https://cloud.google.com/compute/pricing#custommachinetypepricing).
 
-* `WikisumCommoncrawl`
-  * `get_references_commoncrawl`: $50 (1k machines, 1 CPU, 2G memory, 1 hour)
-  * `produce_examples`: $25 (1k machines, 1 CPU, 3G memory, 30 minutes)
-* `WikisumWeb`
-  * `get_references_web`: $600 (1k machines, 4 CPU, 4G memory, 4 hours)
-  * `produce_examples`: $25 (1k machines, 1 CPU, 3G memory, 30 minutes)
+- `WikisumCommoncrawl`
+  - `get_references_commoncrawl`: $50 (1k machines, 1 CPU, 2G memory, 1 hour)
+  - `produce_examples`: $25 (1k machines, 1 CPU, 3G memory, 30 minutes)
+- `WikisumWeb`
+  - `get_references_web`: $600 (1k machines, 4 CPU, 4G memory, 4 hours)
+  - `produce_examples`: $25 (1k machines, 1 CPU, 3G memory, 30 minutes)
 
 ## Commands to generate `WikisumCommoncrawl`
 
@@ -212,10 +211,11 @@ t2t-trainer \
   --output_dir=$TRAIN_DIR
 ```
 
-
 ## Dataset Metadata
+
 The following table is necessary for this dataset to be indexed by search
 engines such as <a href="https://g.co/datasetsearch">Google Dataset Search</a>.
+
 <div itemscope itemtype="http://schema.org/Dataset">
 <table>
   <tr>

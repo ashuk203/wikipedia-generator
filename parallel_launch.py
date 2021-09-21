@@ -38,9 +38,19 @@ python parallel_launch.py \
   --setup_command="pip3 install aiohttp cchardet aiodns bs4 -q --user" \
   --command_prefix="python3 wikisum/get_references_web.py --out_dir=$BUCKET/wiki_references --shard_id"
 ```
+
+Usage for CommonCrawl (invokes get_references_commoncrawl.py):
+
+
+python3 -m parallel_launch \
+  --num_instances=1 --num_threads=1\
+  --cpu=1 --mem=2 \
+  --code_dir=./instance_files/ \
+  --name=wikisum-cc \
+  --command_prefix="bash instance_files/extract-cc-refs.sh" \
+  --setup_command="source instance_files/setup.sh"
 """
 # pylint: enable=line-too-long
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -52,6 +62,8 @@ import socket
 import subprocess as sp
 import time
 
+import pdb
+
 from tensor2tensor.utils import cloud_mlengine as cloud
 import tensorflow.compat.v1 as tf
 
@@ -61,7 +73,7 @@ FLAGS = flags.FLAGS
 
 flags.DEFINE_integer("num_instances", None, "Number of instances to launch.")
 flags.DEFINE_string("name", None, "Instance name prefix.")
-flags.DEFINE_string("log_dir", None, "GCS bucket to copy logs out to.")
+# flags.DEFINE_string("log_dir", None, "GCS bucket to copy logs out to.")
 flags.DEFINE_string("code_dir", None, "Directory to copy.")
 flags.DEFINE_string("setup_command", None, "Setup command to run.")
 flags.DEFINE_string("command_prefix", None, "Command to run, prefix.")
@@ -83,12 +95,17 @@ flags.DEFINE_string("instance_ids", None,
 DELETE = "gcloud compute instances delete {name}"
 DELETE_SELF = ("gcloud compute instances delete $(hostname) --quiet "
                "--zone={zone}")
+
+# Spawn a VM? 
 CREATE_INSTANCE = ("gcloud compute instances create {instance_name} "
                    "--custom-cpu {cpu} --custom-memory {mem} "
                    "--custom-extensions "
-                   "--image-project=ml-images --image-family=tf-1-7 "
+                   "--image-project=deeplearning-platform-release --image-family=tf2-2-4-cu110 "
                    "--scopes=cloud-platform")
+
+# Copy local files to VM (need to specify code_dir argument)
 COPY_CODE = "gcloud compute scp --recurse {local_dir} {instance_name}:~/"
+
 SSH = "gcloud compute ssh {instance_name} --command"
 SCREEN = "screen -dmS test bash -c \"{command}\""
 DEFAULT_ZONE = "gcloud config get-value compute/zone"
@@ -127,22 +144,43 @@ def safe_socket(timeout=2):
 
 def wait_for_ssh(ip):
   """Wait for SSH to be available at given IP address."""
-  for _ in range(12):
+  for _ in range(3):
     with safe_socket() as s:
       try:
         s.connect((ip, 22))
+        print("VM at {} is ready".format(ip))
         return True
       except socket.timeout:
+        print("Socket timed out, retrying...")
         pass
-    time.sleep(10)
+    time.sleep(50)
+
+  print("Giving up ssh connection")
   return False
 
 
 def create_instance(instance_name, cpu=1, mem=4):
+  """
+    Creates Google cloud VM instance. 
+    
+    returns: 
+      external ip address of created instance (for sshing)
+  """
+  # print("Attempting to create instance ", instance_name)
+  # pdb.set_trace()
   tf.logging.info("Creating instance %s", instance_name)
   out = cloud.shell_output(CREATE_INSTANCE, instance_name=instance_name,
                            cpu=cpu, mem=mem)
-  return out.split("\n")[1:-1][0].split()[8]
+
+  with open('gcloud_temp_out.txt', 'w+') as f:
+    f.write(out)
+
+  out_lns = out.split("\n")
+
+  external_ip = out_lns[1].split()[4]
+  # internal_ip = out_lns[1].split()[3]
+
+  return external_ip
 
 
 def list_vm_names_and_ips():
@@ -179,6 +217,7 @@ def launch_instance(instance_name,
   # Create instance
   ip = existing_ip or create_instance(instance_name, cpu=cpu, mem=mem)
   tf.logging.info("Waiting for SSH %s", instance_name)
+
   ready = wait_for_ssh(ip)
   if not ready:
     raise ValueError("Instance %s never ready for SSH" % instance_name)
@@ -190,10 +229,12 @@ def launch_instance(instance_name,
 
   # Run setup
   if setup_command:
+    print("Running setup on {}".format(instance_name))
     tf.logging.info("Running setup on %s", instance_name)
     remote_run(setup_command, instance_name)
 
   # Run command
+  print("Running command on {}".format(instance_name))
   tf.logging.info("Running command on %s", instance_name)
   remote_run(command, instance_name, detach=True)
 
@@ -248,11 +289,16 @@ def main(_):
     if FLAGS.debug_keep_up:
       assert len(instance_ids) == 1
       delete = ""
-    command = "{prefix} {suffix} {logging}; {delete}".format(
+
+    # Main command that will be run on each VM
+    command = "{prefix}; {delete}".format(
         prefix=FLAGS.command_prefix,
+
+        # By default, suffix is the instance index (i.e. int) in range(0, num_instances)
         suffix=suffixes[i],
-        delete=delete,
-        logging=logging)
+
+        delete=delete)
+    
     args = (instance_name, command, existing_ip,
             FLAGS.cpu, FLAGS.mem, code_dir,
             FLAGS.setup_command)
@@ -261,8 +307,11 @@ def main(_):
 
   failed = []
   for res, instance_name, i in async_results:
+    # res.get()
+
     try:
       res.get()
+      print("Successfully launched task {}".format(instance_name))
     except Exception as e:  # pylint: disable=broad-except
       failed.append((instance_name, i))
       tf.logging.error("Failed to launch task %s due to exception %s",
@@ -282,7 +331,7 @@ def main(_):
   for res in results:
     try:
       res.get()
-    except:  # pylint: disable=bare-except
+    except Exception as e:  # pylint: disable=bare-except
       pass
 
   tf.logging.info("Launching complete.")

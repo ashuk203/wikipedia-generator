@@ -13,7 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Extract references from CommonCrawl files."""
+"""
+Extract references from CommonCrawl files. 
+Script runs in parallel across multiple machines.
+"""
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -21,21 +24,28 @@ from __future__ import print_function
 import os
 import tempfile
 
-from tensor2tensor.data_generators.wikisum import utils
-from tensor2tensor.data_generators.wikisum import wikisum
+import utils
+import wikisum
 
 import tensorflow.compat.v1 as tf
 
 flags = tf.flags
 FLAGS = flags.FLAGS
 
+# A.K.A. the number of instances spawned? 
 flags.DEFINE_integer("num_tasks", 1000, "Number of parallel tasks.")
+
+
 flags.DEFINE_integer("task_id", 0, "Task id in a parallel run.")
 flags.DEFINE_string("metadata_dir",
                     "gs://tensor2tensor-data/wikisum/commoncrawl_metadata/",
                     "Path to metadata files specifying what references are in "
                     "which CommonCrawl files.")
+
+# Google cloud bucket if using GCP
 flags.DEFINE_string("out_dir", None, "Directory to write references to.")
+
+# WET is a type of file format. CommonCrawl WET files contain only textual data
 flags.DEFINE_string("commoncrawl_wet_dir", None,
                     "Path to CommonCrawl wet.gz files locally. If not "
                     "provided, will download.")

@@ -1,0 +1,63 @@
+Generate vocab:
+
+  python3 instance_files/generate_vocab.py \
+    --out_dir=$BUCKET/data \
+    --refs_dir=$BUCKET/wiki_references \
+    --for_commoncrawl
+
+
+VM cleanup 
+
+  sh delete_instances.sh wikisum-cc-refs 9
+  sh delete_instances.sh wikisum-cc 1
+
+
+
+gcloud compute ssh wikisum-template --command \
+        "source instance_files/setup.sh 0 1 $BUCKET"
+
+
+
+VM run:
+
+  python3 instance_files/get_references_commoncrawl.py --num_tasks=1 --out_dir=$BUCKET/wiki_references \
+    --task_id 0
+
+  bash instance_files/extract-cc-refs.sh 
+
+  gcloud compute ssh wikisum-template --command "nohup bash instance_files/extract-cc-refs.sh 0 1 $BUCKET >> main.log&"
+
+  gcloud compute ssh wikisum-template --command "nohup bash instance_files/screen-check.sh >> test.log &"
+
+  gcloud compute ssh wikisum-template --command "bash instance_files/setup.sh"
+
+
+
+Google cloud:
+
+  gcloud compute scp --recurse ./instance_files/ wikisum-template:~/
+
+  gcloud compute ssh wikisum-template
+
+  gcloud compute instances create wikisum-template \
+    --custom-cpu 1 --custom-memory 2 \
+    --custom-extensions \
+    --image-project=deeplearning-platform-release --image-family=tf2-2-4-cu110 \
+    --scopes=cloud-platform
+
+  gcloud compute ssh wikisum-template 
+
+  python3 -m tensor2tensor.data_generators.wikisum.get_references_commoncrawl \
+    --num_tasks=8 \
+    --out_dir=$BUCKET/wiki_references \
+    --task_id 0 \
+    > ~/logs-0.txt 2>&1; gsutil cp ~/logs-0.txt $BUCKET/logs
+
+
+
+TF Google Cloud instance reference:
+https://cloud.google.com/deep-learning-vm/docs/tensorflow_start_instance#without-gpus
+
+
+Quota message: 
+  Need quota increase to replicate results of "Generating Wikipedia by Summarizing Long Sequences" paper: https://github.com/tensorflow/tensor2tensor/tree/master/tensor2tensor/data_generators/wikisum
