@@ -1,3 +1,5 @@
+Below instructions will no longer work! refer to scripts folder for modified usage.
+
 # Generating Wikipedia by Summarizing Long Sequences
 
 This directory contains the code and scripts to generate the dataset from the
