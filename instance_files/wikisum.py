@@ -38,6 +38,8 @@ from tensor2tensor.utils import metrics
 from tensor2tensor.utils import registry
 import tensorflow.compat.v1 as tf
 
+import pdb
+
 PROCESS_FOLDER_PREFIX = "process"
 REF_SHARD_FILE_PREFIX = "references.tfrecords.gz"
 REF_SHARD_FILE = REF_SHARD_FILE_PREFIX + "-%05d-of-01000"
@@ -101,6 +103,8 @@ class WikisumBase(problem.Problem):
 
   def generate_lines_for_vocab(self, wikis_dir, refs_dir, max_chars=10**7):
     total_chars = 0
+
+    # pdb.set_trace()
     ref_files_by_shard = _references_files_by_shard(refs_dir)
     for shard_id in range(cc_utils.NUM_SHARDS):
       # Wikipedia articles
@@ -113,16 +117,18 @@ class WikisumBase(problem.Problem):
           total_chars += len(section.text)
 
       # References
-      for i, content in enumerate(
-          six.itervalues(_references_content(ref_files_by_shard[shard_id]))):
-        for line in content.split("\n"):
-          if line:
-            yield _normalize_text(line)
-            total_chars += len(line)
+      cur_ref_files = ref_files_by_shard[shard_id]
+      if len(cur_ref_files) > 0:
+        for i, content in enumerate(
+            six.itervalues(_references_content(cur_ref_files))):
+          for line in content.split("\n"):
+            if line:
+              yield _normalize_text(line)
+              total_chars += len(line)
 
-        # Make sure we use at least 1k references
-        if i >= 1000 and total_chars >= max_chars:
-          break
+          # Make sure we use at least 1k references
+          if i >= 1000 and total_chars >= max_chars:
+            break
 
       if total_chars >= max_chars:
         tf.logging.info("Seen enough chars: %d; finished.", max_chars)
@@ -252,6 +258,8 @@ def _references_content(ref_files):
       "content": tf.FixedLenFeature([], tf.string),
   }
   data = {}
+
+  # pdb.set_trace()
   for ex in generator_utils.tfrecord_iterator(
       ref_files, gzipped=True, example_spec=example_spec):
     data[ex["url"]] = text_encoder.to_unicode(ex["content"])

@@ -1,11 +1,8 @@
 #!/bin/bash
-# use source command
 
-NUM_TASKS=$1
-TASK_NAME=wikisum-cc-refs
-
-for TASK_ID in {0..$NUM_TASKS}
+for (( TASK_ID = 0; TASK_ID < $NUM_TASKS; TASK_ID++ ))
 do
+    # echo $TASK_NAME-$TASK_ID
     gcloud compute instances create $TASK_NAME-$TASK_ID \
         --custom-cpu 1 --custom-memory 2 \
         --custom-extensions \

@@ -10,4 +10,4 @@ python3 instance_files/get_references_commoncrawl.py --num_tasks=$NUM_TASKS --ou
 gsutil cp proc_logs/logs-$TASK_ID.txt $BUCKET/logs; \
 
 # Shut down instance after task completes
-python3 instance_files/delete_self.py
+sudo poweroff

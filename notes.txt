@@ -1,5 +1,7 @@
 Generate vocab:
 
+  
+  python3 -m pdb instance_files/generate_vocab.py \
   python3 instance_files/generate_vocab.py \
     --out_dir=$BUCKET/data \
     --refs_dir=$BUCKET/wiki_references \
@@ -37,7 +39,7 @@ Google cloud:
 
   gcloud compute scp --recurse ./instance_files/ wikisum-template:~/
 
-  gcloud compute ssh wikisum-template
+  gcloud compute ssh wikisum-cc-refs-0
 
   gcloud compute instances create wikisum-template \
     --custom-cpu 1 --custom-memory 2 \
