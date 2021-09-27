@@ -22,12 +22,16 @@ gcloud compute ssh wikisum-template --command \
 
 VM run:
 
-  python3 instance_files/get_references_commoncrawl.py --num_tasks=1 --out_dir=$BUCKET/wiki_references \
-    --task_id 0
+  bash instance_files/extract-cc-refs.sh 7 5000 gs://wikigen_train_data &
+
+  python3 instance_files/get_references_commoncrawl.py --num_tasks=8 --out_dir=$BUCKET/wiki_references \
+    --task_id 7
 
   bash instance_files/extract-cc-refs.sh 
 
   gcloud compute ssh wikisum-template --command "nohup bash instance_files/extract-cc-refs.sh 0 1 $BUCKET >> main.log&"
+
+  gcloud compute ssh wikisum-cc-refs-7 --command "nohup bash instance_files/nohup-test.sh >> test.log&"
 
   gcloud compute ssh wikisum-template --command "nohup bash instance_files/screen-check.sh >> test.log &"
 

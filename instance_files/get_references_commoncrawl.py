@@ -16,6 +16,9 @@
 """
 Extract references from CommonCrawl files. 
 Script runs in parallel across multiple machines.
+
+Note: files won't unit appear on google cloud buckets until all files for current
+task have completed!
 """
 from __future__ import absolute_import
 from __future__ import division
