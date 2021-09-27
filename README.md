@@ -1,4 +1,8 @@
-Below instructions will no longer work! refer to scripts folder for modified usage.
+Below instructions will no longer work! scripts folder contains new code.
+Only the CommonCrawl method has been updated.
+
+Original code:
+https://goo.gl/wSuuS9
 
 # Generating Wikipedia by Summarizing Long Sequences
 
