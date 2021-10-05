@@ -4,7 +4,7 @@
 # (e.g. machines created with parallel_launch.py).
 # Example usage:
 # delete_instances.sh fetch-ref-urls 1000
-# sh delete_instances.sh wikisum-cc-refs 9
+# sh delete_instances.sh wikisum-cc-refs 6 8
 
 NAME=$1
 MAX=$2

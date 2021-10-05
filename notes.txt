@@ -1,22 +1,29 @@
-Generate vocab:
+Validate data:
 
-  
-  python3 -m pdb instance_files/generate_vocab.py \
+nohup python3 instance_files/validate_data.py \
+  --out_dir=$BUCKET/data \
+  --for_commoncrawl >> main.log &
+
+
+Produce examples:
+  bash instance_files/gen-cc-examples.sh 0 1 gs://wikigen_train_data &
+
   python3 instance_files/generate_vocab.py \
     --out_dir=$BUCKET/data \
     --refs_dir=$BUCKET/wiki_references \
     --for_commoncrawl
 
 
-VM cleanup 
 
-  sh delete_instances.sh wikisum-cc-refs 9
-  sh delete_instances.sh wikisum-cc 1
+Generate vocab:
 
+  
+  python3 -m pdb instance_files/generate_vocab.py \
+  nohup python3 instance_files/generate_vocab.py \
+    --out_dir=$BUCKET/data \
+    --refs_dir=$BUCKET/wiki_references \
+    --for_commoncrawl >> proc_logs/gen-vocab.log &
 
-
-gcloud compute ssh wikisum-template --command \
-        "source instance_files/setup.sh 0 1 $BUCKET"
 
 
 
@@ -37,6 +44,16 @@ VM run:
 
   gcloud compute ssh wikisum-template --command "bash instance_files/setup.sh"
 
+
+
+VM cleanup 
+
+  sh delete_instances.sh wikisum-cc-refs 9
+  sh delete_instances.sh wikisum-cc 1
+
+
+gcloud compute ssh wikisum-template --command \
+        "source instance_files/setup.sh 0 1 $BUCKET"
 
 
 Google cloud:

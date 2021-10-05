@@ -425,9 +425,12 @@ def produce_examples(shard_ids, wikis_dir, refs_dir, urls_dir, vocab_path,
         stats_wiki_original_refs = len(ref_urls)
         stats_wiki_found_refs = 0
         for ref_url in ref_urls:
-          ref_content = refs_content.get(ref_url)
+          ref_url_bytes = ref_url.encode('utf-8')
+          ref_content = refs_content.get(ref_url_bytes)
+
           if not ref_content:
             continue
+
           stats["total_found_refs"] += 1
           stats["ref_lengths"].append(len(ref_content))
           stats_wiki_found_refs += 1

@@ -21,10 +21,12 @@ from __future__ import print_function
 import os
 
 from six.moves import range
-from wikisum import utils
+import utils
 import wikisum
 
 import tensorflow.compat.v1 as tf
+
+import pdb
 
 flags = tf.flags
 FLAGS = flags.FLAGS
@@ -58,6 +60,7 @@ def main(_):
   shard_ids = utils.shard(list(range(utils.NUM_SHARDS)),
                           FLAGS.num_tasks)[FLAGS.task_id]
 
+  # pdb.set_trace()
   with utils.timing("produce_examples"):
     wikisum.produce_examples(
         shard_ids=shard_ids,
